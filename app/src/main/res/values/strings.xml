@@ -1,4 +1,31 @@
 <resources>
     <string name="app_name">DougaUnDroid</string>
     <string name="home_screen_button_select_video">Choose a video</string>
+    <string name="setting_screen_title">Settings</string>
+    <string name="setting_open_source_code_title">open source code</string>
+    <string name="setting_open_source_code_description">You can see it on GitHub</string>
+    <string name="setting_open_privacy_policy_title">Open privacy policy</string>
+    <string name="setting_open_privacy_policy_description">Processed within the device</string>
+    <string name="setting_license_title">license</string>
+    <string name="setting_license_description">thx !!!</string>
+    <string name="license_screen_title">License</string>
+    <string name="progress_screen_title">Progress</string>
+    <string name="progress_message_title">I am creating a video that plays in reverse.</string>
+    <string name="progress_message_description">It will take some time. Don\'t worry, the process will continue even if you leave the app.</string>
+    <string name="progress_cancel">cancel</string>
+    <string name="hello_message_title">This is an app that creates videos that play in reverse.</string>
+    <string name="hello_message_description">
+Creates a video that plays the selected video in reverse.\n
+The process of creating a video for reverse playback is completed within the device.\n
+(No internet connection is required, so no data is sent outside.)</string>
+    <string name="select_video">Select video</string>
+    <string name="select_video_info_title">Selected video</string>
+    <string name="select_video_info_video_title">title</string>
+    <string name="select_video_info_duration">video duration</string>
+    <string name="select_video_re_select">Reselect video</string>
+    <string name="start_button">start processing</string>
+    <string name="start_button_description">It will take some time to create. sorry.</string>
+    <string name="service_notification_channel_name">Service to create reverse playback videos</string>
+    <string name="service_notification_title">Creating a video that plays in reverse</string>
+    <string name="service_notification_description">Creating a reverse video. It will take some time to create.</string>
 </resources>

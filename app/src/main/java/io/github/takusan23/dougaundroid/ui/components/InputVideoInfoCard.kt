@@ -9,11 +9,18 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.takusan23.dougaundroid.R
 import io.github.takusan23.dougaundroid.data.InputVideoInfo
 
-/** 入力した動画の情報を表示する */
+/**
+ * 入力した動画の情報を表示する
+ *
+ * @param inputVideoInfo 選択した動画の情報
+ * @param onReSelectClick 選び直すを押した時
+ */
 @Composable
 fun InputVideoInfoCard(
     modifier: Modifier = Modifier,
@@ -28,17 +35,17 @@ fun InputVideoInfoCard(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
-                text = "選択した動画",
+                text = stringResource(id = R.string.select_video_info_title),
                 fontSize = 20.sp
             )
-            Text(text = "タイトル : ${inputVideoInfo.name}")
-            Text(text = "動画時間 : ${inputVideoInfo.videoDurationMs} ミリ秒")
+            Text(text = "${stringResource(id = R.string.select_video_info_video_title)} : ${inputVideoInfo.name}")
+            Text(text = "${stringResource(id = R.string.select_video_info_duration)} : ${inputVideoInfo.videoDurationMs} ms")
 
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onReSelectClick
             ) {
-                Text(text = "選び直す")
+                Text(text = stringResource(id = R.string.select_video_re_select))
             }
         }
     }

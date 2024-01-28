@@ -95,13 +95,13 @@ class DougaUnDroidService : Service() {
         // 通知ちゃんねる無ければ作る
         if (notificationManager.getNotificationChannel(NOTIFICATION_CHANNEL_ID) == null) {
             val channel = NotificationChannelCompat.Builder(NOTIFICATION_CHANNEL_ID, NotificationManagerCompat.IMPORTANCE_LOW).apply {
-                setName("逆再生動画を作るサービス")
+                setName(getString(R.string.service_notification_channel_name))
             }.build()
             notificationManager.createNotificationChannel(channel)
         }
         val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID).apply {
-            setContentTitle(getString(R.string.app_name))
-            setContentText(getString(R.string.app_name))
+            setContentTitle(getString(R.string.service_notification_title))
+            setContentText(getString(R.string.service_notification_description))
             setProgress(10, (currentPosition * 10).toInt(), false)
             setSmallIcon(R.drawable.ic_launcher_foreground)
         }.build()

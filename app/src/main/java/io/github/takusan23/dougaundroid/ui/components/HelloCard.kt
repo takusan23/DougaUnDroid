@@ -9,10 +9,16 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.takusan23.dougaundroid.R
 
-/** 端末内で処理されるから安心してねカード */
+/**
+ * 端末内で処理されるから安心してねカード
+ *
+ * @param onSelectClick 動画を選ぶを押したときに呼ばれる
+ */
 @Composable
 fun HelloCard(
     modifier: Modifier = Modifier,
@@ -24,16 +30,16 @@ fun HelloCard(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
-                text = "逆再生の動画を作るアプリです",
+                text = stringResource(id = R.string.hello_message_title),
                 fontSize = 20.sp
             )
-            Text(text = "選択した動画が逆再生になる動画を作成します。逆再生の動画を作成する処理は、端末内で完結します（インターネット接続は不要です。オフラインでも動きます）。")
+            Text(text = stringResource(id = R.string.hello_message_description))
 
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onSelectClick
             ) {
-                Text(text = "動画を選ぶ")
+                Text(text = stringResource(id = R.string.select_video))
             }
         }
     }

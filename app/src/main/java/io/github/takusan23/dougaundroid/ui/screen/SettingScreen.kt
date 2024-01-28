@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
@@ -44,7 +45,7 @@ fun SettingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "設定") },
+                title = { Text(text = stringResource(id = R.string.setting_screen_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(painter = painterResource(id = R.drawable.arrow_back_24px), contentDescription = null)
@@ -57,8 +58,8 @@ fun SettingScreen(
 
             item {
                 SettingItem(
-                    title = "ソースコードをみる",
-                    description = "GitHub が開きます",
+                    title = stringResource(id = R.string.setting_open_source_code_title),
+                    description = stringResource(id = R.string.setting_open_source_code_description),
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, GitHubUrl.toUri())
                         context.startActivity(intent)
@@ -68,8 +69,8 @@ fun SettingScreen(
 
             item {
                 SettingItem(
-                    title = "プライバシーポリシー",
-                    description = "プラウザが開きます",
+                    title = stringResource(id = R.string.setting_open_privacy_policy_title),
+                    description = stringResource(id = R.string.setting_open_privacy_policy_description),
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, PrivacyPolicyUrl.toUri())
                         context.startActivity(intent)
@@ -79,8 +80,8 @@ fun SettingScreen(
 
             item {
                 SettingItem(
-                    title = "ライセンス",
-                    description = "thx!!!",
+                    title = stringResource(id = R.string.setting_license_title),
+                    description = stringResource(id = R.string.setting_license_description),
                     onClick = { onNavigate(MainScreenPaths.License) }
                 )
             }

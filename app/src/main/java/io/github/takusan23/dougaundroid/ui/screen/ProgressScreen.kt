@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.takusan23.dougaundroid.R
 
@@ -37,7 +38,7 @@ fun ProgressScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "作成中です") },
+                title = { Text(text = stringResource(id = R.string.progress_screen_title)) },
                 actions = {
                     IconButton(onClick = { onNavigate(MainScreenPaths.Setting) }) {
                         Icon(painter = painterResource(id = R.drawable.settings_24px), contentDescription = null)
@@ -57,11 +58,11 @@ fun ProgressScreen(
 
             LinearProgressIndicator(progress = progress)
 
-            Text(text = "逆再生動画を作成しています。")
-            Text(text = "少し時間がかかります。アプリを離れても処理は継続されますので、安心してください。")
+            Text(text = stringResource(id = R.string.progress_message_title))
+            Text(text = stringResource(id = R.string.progress_message_description))
 
             Button(onClick = onCancelClick) {
-                Text(text = "キャンセル")
+                Text(text = stringResource(id = R.string.progress_cancel))
             }
         }
     }

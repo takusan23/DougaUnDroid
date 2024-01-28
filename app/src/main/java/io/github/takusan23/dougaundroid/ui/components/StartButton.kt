@@ -8,9 +8,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import io.github.takusan23.dougaundroid.R
 
-/** 処理を開始するボタン */
+/**
+ * 処理を開始するボタン
+ *
+ * @param onClick 処理を開始 を押すと呼ばれる
+ */
 @Composable
 fun StartButton(
     modifier: Modifier = Modifier,
@@ -22,8 +28,8 @@ fun StartButton(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Button(onClick = onClick) {
-            Text(text = "処理を開始")
+            Text(text = stringResource(id = R.string.start_button))
         }
-        Text(text = "処理には時間がかかります。ごめんね")
+        Text(text = stringResource(id = R.string.start_button_description))
     }
 }

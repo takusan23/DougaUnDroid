@@ -2,4 +2,31 @@
 <resources>
     <string name="app_name">どうがうんどろいど</string>
     <string name="home_screen_button_select_video">動画を選ぶ</string>
+    <string name="setting_screen_title">設定</string>
+    <string name="setting_open_source_code_title">ソースコードをみる</string>
+    <string name="setting_open_source_code_description">GitHub で見れます</string>
+    <string name="setting_open_privacy_policy_title">プライバシーポリシーを開く</string>
+    <string name="setting_open_privacy_policy_description">端末内で処理されます</string>
+    <string name="setting_license_title">ライセンス</string>
+    <string name="setting_license_description">thx !!!</string>
+    <string name="license_screen_title">ライセンス</string>
+    <string name="progress_screen_title">作成中です</string>
+    <string name="progress_message_title">逆再生動画を作成しています。</string>
+    <string name="progress_message_description">少し時間がかかります。アプリを離れても処理は継続されますので、安心してください。</string>
+    <string name="progress_cancel">キャンセル</string>
+    <string name="hello_message_title">逆再生の動画を作るアプリです</string>
+    <string name="hello_message_description">
+選択した動画が逆再生になる動画を作成します。\n
+逆再生の動画を作成する処理は、端末内で完結します。\n
+（インターネット接続は不要なため、外部にも送信されません）</string>
+    <string name="select_video">動画を選択</string>
+    <string name="select_video_info_title">選択した動画</string>
+    <string name="select_video_info_video_title">タイトル</string>
+    <string name="select_video_info_duration">動画の長さ</string>
+    <string name="select_video_re_select">動画を選び直す</string>
+    <string name="start_button">処理を開始</string>
+    <string name="start_button_description">作成にはしばらく時間がかかります。ごめんね。</string>
+    <string name="service_notification_channel_name">"逆再生動画を作るサービス "</string>
+    <string name="service_notification_title">逆再生の動画を作成中</string>
+    <string name="service_notification_description">逆再生動画を作成中です。作成にはしばらく時間がかかります。</string>
 </resources>
