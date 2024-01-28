@@ -93,13 +93,15 @@ object CanvasVideoProcessor {
                 while (!outputDone) {
                     // コルーチンキャンセル時は強制終了
                     if (!isActive) break
-
                     // OpenGL で描画する
                     // Canvas の入力をする
                     var isRunning = false
                     canvasInputSurface.drawCanvas { canvas ->
                         isRunning = onCanvasDrawRequest(canvas, currentPositionUs / 1_000L)
                     }
+
+                    // 一応確認
+                    if (!isActive) break
                     canvasInputSurface.setPresentationTime(currentPositionUs * 1_000L)
                     canvasInputSurface.swapBuffers()
                     if (!isRunning) {

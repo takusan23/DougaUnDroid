@@ -3,12 +3,17 @@ package io.github.takusan23.dougaundroid.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,6 +34,15 @@ fun HelloCard(
             modifier = Modifier.padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            Icon(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
+                painter = painterResource(id = R.drawable.android_douga_undroid),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Divider()
             Text(
                 text = stringResource(id = R.string.hello_message_title),
                 fontSize = 20.sp
