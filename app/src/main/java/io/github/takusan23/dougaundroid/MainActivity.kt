@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import io.github.takusan23.dougaundroid.ui.screen.HomeScreen
+import io.github.takusan23.dougaundroid.ui.screen.MainScreen
 import io.github.takusan23.dougaundroid.ui.theme.DougaUnDroidTheme
 
 class MainActivity : ComponentActivity() {
@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             DougaUnDroidTheme {
-                HomeScreen()
+                MainScreen()
             }
         }
     }
