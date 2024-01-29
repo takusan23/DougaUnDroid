@@ -61,7 +61,7 @@ class DougaUnDroidService : Service() {
             setForegroundNotification()
 
             // 処理中の位置を見る
-            launch {
+            val progressCollectJob = launch {
                 _currentProgress.collect { progress ->
                     setForegroundNotification(progress)
                 }
@@ -81,6 +81,8 @@ class DougaUnDroidService : Service() {
                 // 終了時・コルーチンキャンセル時
                 _isEncoding.value = false
                 _currentProgress.value = 0f
+                // フォアグラウンドサービス終了
+                progressCollectJob.cancel()
                 ServiceCompat.stopForeground(this@DougaUnDroidService, ServiceCompat.STOP_FOREGROUND_REMOVE)
             }
         }
