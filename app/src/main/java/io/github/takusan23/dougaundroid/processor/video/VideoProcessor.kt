@@ -23,8 +23,7 @@ object VideoProcessor {
         // MediaExtractor だとなんかフレームレートとかビットレートは取れない？ MediaMetadataRetriever にしてみた
         val inputVideoMediaMetadataRetriever = MediaMetadataRetriever().apply { setDataSource(context, inFile) }
         val bitRate = inputVideoMediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)?.toIntOrNull() ?: 3_000_000
-        val videoWidth = inputVideoMediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 1280
-        val videoHeight = inputVideoMediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 720
+        val (_, videoHeight, videoWidth) = inputVideoMediaMetadataRetriever.extractVideoSize()
         val durationMs = inputVideoMediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toInt()!!
         val frameRate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             inputVideoMediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)?.toIntOrNull() ?: 30
@@ -57,4 +56,22 @@ object VideoProcessor {
         )
     }
 
+    /**
+     * MediaMetadataRetriever で動画の縦横を取得する
+     *
+     * @return 1個目が縦かどうか、2個目が Height、3個目が Width
+     */
+    private fun MediaMetadataRetriever.extractVideoSize(): Triple<Boolean, Int, Int> {
+        // Android のメディア系（ Retriever だけでなく、MediaExtractor お前もだぞ）
+        // 縦動画の場合、縦と横が入れ替わるワナが存在する
+        // ROTATION を見る必要あり
+        val videoWidth = extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 1280
+        val videoHeight = extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 720
+        val rotation = extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull() ?: 0
+        return when (rotation) {
+            // 縦だけ入れ替わるので
+            90, 270 -> Triple(true, videoWidth, videoHeight)
+            else -> Triple(false, videoHeight, videoWidth)
+        }
+    }
 }
