@@ -2,10 +2,13 @@ package io.github.takusan23.dougaundroid.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -53,6 +56,8 @@ fun HelloCard(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onSelectClick
             ) {
+                Icon(painter = painterResource(id = R.drawable.folder_24px), contentDescription = null)
+                Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
                 Text(text = stringResource(id = R.string.select_video))
             }
         }

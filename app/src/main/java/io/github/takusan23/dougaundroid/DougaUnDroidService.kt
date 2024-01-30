@@ -105,7 +105,7 @@ class DougaUnDroidService : Service() {
             setContentTitle(getString(R.string.service_notification_title))
             setContentText(getString(R.string.service_notification_description))
             setProgress(10, (currentPosition * 10).toInt(), false)
-            setSmallIcon(R.drawable.ic_launcher_foreground)
+            setSmallIcon(R.drawable.android_douga_undroid)
         }.build()
         // 一応 compat で
         val foregroundServiceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
