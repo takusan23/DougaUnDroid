@@ -1,11 +1,16 @@
 package io.github.takusan23.dougaundroid.processor.video
 
 import android.content.Context
-import android.graphics.Paint
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
+import io.github.takusan23.akaricore.v5.video.AkariGraphicsProcessor
+import io.github.takusan23.akaricore.v5.video.gl.AkariGraphicsSurfaceTexture
+import io.github.takusan23.dougaundroid.akaricorev5.video.AkariVideoDecoder
+import io.github.takusan23.dougaundroid.akaricorev5.video.AkariVideoEncoder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -31,29 +36,66 @@ object VideoProcessor {
             30
         }
 
-        // 映像を逆にする処理
-        // Canvas から動画を作るやつを使う
-        // https://takusan.negitoro.dev/posts/android_canvas_to_video/
-        // Canvas で描画しろって毎フレーム呼ばれるので、そこに入力動画のフレームを Bitmap で描画する
-        val paint = Paint()
-        CanvasVideoProcessor.start(
-            outFile = outFile,
-            bitRate = bitRate,
-            frameRate = frameRate,
-            outputVideoWidth = videoWidth,
-            outputVideoHeight = videoHeight,
-            onCanvasDrawRequest = { currentPositionMs ->
+        // エンコーダーをつくる
+        val akariVideoEncoder = AkariVideoEncoder().apply {
+            prepare(
+                outFile = outFile,
+                bitRate = bitRate,
+                frameRate = frameRate,
+                outputVideoWidth = videoWidth,
+                outputVideoHeight = videoHeight
+            )
+        }
+        // OpenGL ES の用意をする
+        val akariGraphicsProcessor = AkariGraphicsProcessor(
+            outputSurface = akariVideoEncoder.getInputSurface(),
+            isEnableTenBitHdr = true,
+            width = videoWidth,
+            height = videoHeight
+        ).apply { prepare() }
+        // 動画フレームを OpenGL ES のテクスチャとして使う SurfaceTexture を、Processor で使う
+        val akariSurfaceTexture = akariGraphicsProcessor.genTextureId { texId -> AkariGraphicsSurfaceTexture(texId) }
+        // 動画デコーダー
+        val akariVideoDecoder = AkariVideoDecoder().apply { prepare(context, inFile, akariSurfaceTexture.surface) }
+
+        // エンコーダーを起動する
+        val encoderJob = launch {
+            akariVideoEncoder.start()
+        }
+
+        // 描画ループを回す
+        val oneFrameMs = 1_000 / frameRate
+        val graphicsJob = launch {
+            var nextVideoFrameMs = durationMs.toLong()
+            var currentPositionMs = 0L
+            akariGraphicsProcessor.drawLoop {
+                // 返り値
+                val info = AkariGraphicsProcessor.DrawInfo(
+                    isRunning = 0 <= nextVideoFrameMs,
+                    currentFrameMs = currentPositionMs
+                )
                 onProgressUpdateMs(currentPositionMs)
-                // 逆再生したときの、動画のフレームを取り出して、Canvas に書く。
-                // getFrameAtTime はマイクロ秒なので注意
-                val reverseCurrentPositionMs = durationMs - currentPositionMs
-                val bitmap = inputVideoMediaMetadataRetriever.getFrameAtTime(reverseCurrentPositionMs * 1_000, MediaMetadataRetriever.OPTION_CLOSEST)
-                if (bitmap != null) {
-                    drawBitmap(bitmap, 0f, 0f, paint)
-                }
-                currentPositionMs <= durationMs
+                // シークして動画フレームを描画する
+                akariVideoDecoder.seekTo(nextVideoFrameMs)
+                drawSurfaceTexture(akariSurfaceTexture)
+                // 動画フレームを後ろから取得なので減らす
+                nextVideoFrameMs -= oneFrameMs
+                // 動画時間を進める
+                currentPositionMs += oneFrameMs
+                info
             }
-        )
+        }
+
+        // graphicsJob が終わったらキャンセルする
+        try {
+            graphicsJob.join()
+            encoderJob.cancelAndJoin()
+        } finally {
+            akariGraphicsProcessor.destroy()
+            akariVideoDecoder.destroy()
+            akariSurfaceTexture.destroy()
+            inputVideoMediaMetadataRetriever.release()
+        }
     }
 
     /**
