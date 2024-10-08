@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -45,7 +45,7 @@ fun HelloCard(
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary
             )
-            Divider()
+            HorizontalDivider()
             Text(
                 text = stringResource(id = R.string.hello_message_title),
                 fontSize = 20.sp

@@ -56,7 +56,7 @@ fun ProgressScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
-            LinearProgressIndicator(progress = progress)
+            LinearProgressIndicator(progress = { progress })
 
             Text(text = stringResource(id = R.string.progress_message_title))
             Text(text = stringResource(id = R.string.progress_message_description))

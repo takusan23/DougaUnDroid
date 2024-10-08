@@ -7,6 +7,7 @@ import android.media.MediaFormat
 import android.media.MediaMuxer
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
@@ -14,13 +15,13 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /** Canvas から動画を作る。毎フレーム呼ばれる */
+@OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
 object CanvasVideoProcessor {
 
     /** タイムアウト */
     private const val TIMEOUT_US = 10000L
 
     /** OpenGL 描画用スレッドの Kotlin Coroutine Dispatcher */
-    @OptIn(DelicateCoroutinesApi::class)
     private val openGlRelatedThreadDispatcher = newSingleThreadContext("openGlRelatedThreadDispatcher")
 
     /**
