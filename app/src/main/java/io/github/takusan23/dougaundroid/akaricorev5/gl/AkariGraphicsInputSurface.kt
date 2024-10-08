@@ -21,6 +21,8 @@ internal class AkariGraphicsInputSurface(
     private var mEGLSurface = EGL14.EGL_NO_SURFACE
 
     init {
+        // 10Bit HDR のためには HLG の表示が必要。
+        // それには OpenGL ES 3.0 でセットアップし、10Bit に設定する必要がある。
         if (isEnableTenBitHdr) {
             eglSetupForTenBitHdr()
         } else {
@@ -52,7 +54,7 @@ internal class AkariGraphicsInputSurface(
         val configs = arrayOfNulls<EGLConfig>(1)
         val numConfigs = IntArray(1)
         EGL14.eglChooseConfig(mEGLDisplay, attribList, 0, configs, 0, configs.size, numConfigs, 0)
-        checkEglError("eglCreateContext RGB888 ES3")
+        checkEglError("eglCreateContext RGBA1010102 ES3")
 
         // Configure context for OpenGL ES 3.0.
         val attrib_list = intArrayOf(

@@ -29,7 +29,7 @@ class AkariGraphicsProcessor(
     private val openGlRelatedThreadDispatcher = newSingleThreadContext("openGlRelatedThreadDispatcher")
 
     private val inputSurface = AkariGraphicsInputSurface(outputSurface, isEnableTenBitHdr)
-    private val textureRenderer = AkariGraphicsTextureRenderer(width, height)
+    private val textureRenderer = AkariGraphicsTextureRenderer(width, height, isEnableTenBitHdr)
 
     /** [AkariGraphicsTextureRenderer]等の用意をします */
     suspend fun prepare() {

@@ -18,7 +18,8 @@ import java.nio.ByteOrder
  */
 class AkariGraphicsTextureRenderer internal constructor(
     private val width: Int,
-    private val height: Int
+    private val height: Int,
+    private val isEnableTenBitHdr: Boolean
 ) {
     private val mTriangleVertices = ByteBuffer.allocateDirect(mTriangleVerticesData.size * FLOAT_SIZE_BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer()
     private val mMVPMatrix = FloatArray(16)
@@ -185,7 +186,11 @@ class AkariGraphicsTextureRenderer internal constructor(
      * GL スレッドから呼び出すこと。
      */
     internal fun prepareShader() {
-        mProgram = createProgram(VERTEX_SHADER, FRAGMENT_SHADER)
+        mProgram = createProgram(
+            vertexSource = VERTEX_SHADER,
+            // TODO HLG だろうと samplerExternalOES から HDR のフレームが取れてそう
+            fragmentSource = if (isEnableTenBitHdr) FRAGMENT_SHADER_10BIT_HDR else FRAGMENT_SHADER
+        )
         if (mProgram == 0) {
             throw RuntimeException("failed creating program")
         }
@@ -500,6 +505,51 @@ void main() {
         private const val FRAGMENT_SHADER_DRAW_MODE_SURFACE_TEXTURE = 1
         private const val FRAGMENT_SHADER_DRAW_MODE_CANVAS_BITMAP = 2
         private const val FRAGMENT_SHADER_DRAW_MODE_FBO = 3
+
+        private const val FRAGMENT_SHADER_10BIT_HDR = """#version 300 es
+#extension GL_EXT_YUV_target : require
+precision mediump float;
+
+in vec2 vTextureCoord;
+uniform sampler2D sCanvasTexture;
+uniform sampler2D sFboTexture;
+uniform __samplerExternal2DY2YEXT sSurfaceTexture;
+
+// 何を描画するか
+// 1 SurfaceTexture（カメラや動画のデコード映像）
+// 2 Bitmap（テキストや画像を描画した Canvas）
+// 3 FBO
+uniform int iDrawMode;
+
+// 出力色
+out vec4 FragColor;
+
+// https://github.com/android/camera-samples/blob/a07d5f1667b1c022dac2538d1f553df20016d89c/Camera2Video/app/src/main/java/com/example/android/camera2/video/HardwarePipeline.kt#L107
+vec3 yuvToRgb(vec3 yuv) {
+  const vec3 yuvOffset = vec3(0.0625, 0.5, 0.5);
+  const mat3 yuvToRgbColorTransform = mat3(
+    1.1689f, 1.1689f, 1.1689f,
+    0.0000f, -0.1881f, 2.1502f,
+    1.6853f, -0.6530f, 0.0000f
+  );
+  return clamp(yuvToRgbColorTransform * (yuv - yuvOffset), 0.0, 1.0);
+}
+
+void main() {   
+  vec4 outColor = vec4(0.0, 0.0, 0.0, 1.0);
+
+  if (iDrawMode == 1) {
+    outColor.rgb = yuvToRgb(texture(sSurfaceTexture, vTextureCoord).rgb);
+  } else if (iDrawMode == 2) {
+    // テクスチャ座標なので Y を反転
+    outColor = texture(sCanvasTexture, vec2(vTextureCoord.x, 1.0 - vTextureCoord.y));
+  } else if (iDrawMode == 3) {
+    outColor = texture(sFboTexture, vTextureCoord);
+  }
+
+  FragColor = outColor;
+}
+"""
 
         private const val FRAGMENT_SHADER = """#version 300 es
 #extension GL_OES_EGL_image_external_essl3 : require
