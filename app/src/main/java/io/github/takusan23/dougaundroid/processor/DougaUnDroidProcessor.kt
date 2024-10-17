@@ -33,6 +33,7 @@ object DougaUnDroidProcessor {
         try {
 
             // 音声トラック・映像トラックそれぞれ並列で処理
+            // TODO 音声トラックがない場合の処理
             listOf(
                 launch {
                     AudioProcessor.start(

@@ -54,6 +54,12 @@ class DougaUnDroidService : Service() {
         }
     }
 
+    // MEDIA_PROCESSING は 6 時間までしか動かせないらしい。アプリを表示させるとリセットされる模様。
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        super.onTimeout(startId, fgsType)
+        stopSelf()
+    }
+
     /** 処理を開始する */
     fun startProcess(info: InputVideoInfo) {
         scope.launch {
@@ -84,6 +90,7 @@ class DougaUnDroidService : Service() {
                 // フォアグラウンドサービス終了
                 progressCollectJob.cancel()
                 ServiceCompat.stopForeground(this@DougaUnDroidService, ServiceCompat.STOP_FOREGROUND_REMOVE)
+                stopSelf()
             }
         }
     }
@@ -108,17 +115,23 @@ class DougaUnDroidService : Service() {
             setSmallIcon(R.drawable.android_douga_undroid)
         }.build()
         // 一応 compat で
-        val foregroundServiceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-        } else {
-            0
+        // MEDIA_PROCESSING は Android 15 で追加されたため、14 の場合は SPECIAL_USE を使う。
+        val foregroundServiceType = when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM -> ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROCESSING
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            else -> 0
         }
-        ServiceCompat.startForeground(
-            this,
-            NOTIFICATION_ID,
-            notification,
-            foregroundServiceType
-        )
+        // TODO ServiceCompat.startForeground が targetSdk=35 に対応したら Compat だけ使う
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            startForeground(NOTIFICATION_ID, notification, foregroundServiceType)
+        } else {
+            ServiceCompat.startForeground(
+                this,
+                NOTIFICATION_ID,
+                notification,
+                foregroundServiceType
+            )
+        }
     }
 
 
