@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Android 9 以下で動画フォルダに保存するため。Android 10 以降は不要。 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <!-- FOREGROUND_SERVICE_MEDIA_PROCESSING は Android 15 から導入された。Android 14 では引き続き SPECIAL_USE を利用するため、maxSdkVersion -->

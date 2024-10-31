@@ -28,4 +28,8 @@ The process of creating a video for reverse playback is completed within the dev
     <string name="service_notification_channel_name">Service to create reverse playback videos</string>
     <string name="service_notification_title">Creating a video that plays in reverse</string>
     <string name="service_notification_description">Creating a reverse video. It will take some time to create.</string>
+    <string name="permission_granted_title">Permissions have been granted</string>
+    <string name="permission_request_title">Permission to save files is required</string>
+    <string name="permission_request_description">Used to save the reverse video file you created in the video folder.</string>
+    <string name="permission_request_button">Permission granted</string>
 </resources>

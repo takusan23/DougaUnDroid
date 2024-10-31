@@ -2,6 +2,7 @@ package io.github.takusan23.dougaundroid.processor.tool
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.content.contentValuesOf
@@ -18,11 +19,18 @@ object MediaStoreTool {
         file: File
     ) = withContext(Dispatchers.IO) {
         val contentResolver = context.contentResolver
-        val contentValues = contentValuesOf(
-            MediaStore.MediaColumns.DISPLAY_NAME to file.name,
-            MediaStore.MediaColumns.RELATIVE_PATH to "${Environment.DIRECTORY_MOVIES}/DougaUnDroid",
-            MediaStore.MediaColumns.MIME_TYPE to "video/mp4"
-        )
+        val contentValues = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            contentValuesOf(
+                MediaStore.MediaColumns.DISPLAY_NAME to file.name,
+                MediaStore.MediaColumns.MIME_TYPE to "video/mp4",
+                MediaStore.MediaColumns.RELATIVE_PATH to "${Environment.DIRECTORY_MOVIES}/DougaUnDroid"
+            )
+        } else {
+            contentValuesOf(
+                MediaStore.MediaColumns.DISPLAY_NAME to file.name,
+                MediaStore.MediaColumns.MIME_TYPE to "video/mp4"
+            )
+        }
         val uri = contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues) ?: return@withContext
         // コピーする
         contentResolver.openOutputStream(uri)?.use { outputStream ->

@@ -1,5 +1,6 @@
 package io.github.takusan23.dougaundroid.ui.screen
 
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,6 +33,7 @@ import io.github.takusan23.dougaundroid.data.InputVideoInfo
 import io.github.takusan23.dougaundroid.processor.tool.MediaStoreTool
 import io.github.takusan23.dougaundroid.ui.components.HelloCard
 import io.github.takusan23.dougaundroid.ui.components.InputVideoInfoCard
+import io.github.takusan23.dougaundroid.ui.components.PermissionCard
 import io.github.takusan23.dougaundroid.ui.components.StartButton
 import kotlinx.coroutines.launch
 
@@ -78,7 +80,6 @@ fun HomeScreen(
             onNavigate = onNavigate,
             onCancelClick = { bindService.value?.stopProcess() }
         )
-
         return
     }
 
@@ -116,6 +117,14 @@ fun HomeScreen(
                     )
                 }
             }
+
+            // Android 9 以下は権限が必要
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                item {
+                    PermissionCard()
+                }
+            }
+
 
             // 開始ボタンまでスペースが空いていて欲しい
             item {

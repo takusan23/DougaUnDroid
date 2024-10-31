@@ -29,4 +29,8 @@
     <string name="service_notification_channel_name">"逆再生動画を作るサービス "</string>
     <string name="service_notification_title">逆再生の動画を作成中</string>
     <string name="service_notification_description">逆再生動画を作成中です。作成にはしばらく時間がかかります。</string>
+    <string name="permission_granted_title">権限は付与済みです</string>
+    <string name="permission_request_title">ファイル保存の権限が必要です</string>
+    <string name="permission_request_description">作成した逆再生の動画ファイルを動画フォルダに保存するために利用します。</string>
+    <string name="permission_request_button">権限を付与</string>
 </resources>
