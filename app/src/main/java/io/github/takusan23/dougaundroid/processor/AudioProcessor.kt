@@ -1,10 +1,11 @@
-package io.github.takusan23.dougaundroid.processor.audio
+package io.github.takusan23.dougaundroid.processor
 
 import android.content.Context
-import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.net.Uri
+import io.github.takusan23.akaricore.audio.AudioEncodeDecodeProcessor
+import io.github.takusan23.akaricore.common.toAkariCoreInputOutputData
 import io.github.takusan23.dougaundroid.processor.tool.MediaExtractorTool
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -23,31 +24,26 @@ object AudioProcessor {
      */
     suspend fun start(
         context: Context,
-        inFile: Uri,
+        inUri: Uri,
         outFile: File,
         tempFolder: File
     ): Boolean {
-
         // そもそも音声トラックがない場合は早期 return。 false
-        val mediaExtractorFormatPair = MediaExtractorTool.createMediaExtractor(context, inFile, MediaExtractorTool.Track.AUDIO) ?: return false
+        val inputMediaFormat = MediaExtractorTool.getTrackMediaFormat(context, inUri, MediaExtractorTool.Track.AUDIO) ?: return false
+        var outputMediaFormat: MediaFormat? = null
 
         // 音声の生データ置き場
         val rawDataFile = tempFolder.resolve("raw_file")
         val reverseRawDataFile = tempFolder.resolve("reverse_raw_data")
 
-        // ファイルのメタデータ
-        var inputMediaFormat: MediaFormat? = null
-        var outputMediaFormat: MediaFormat? = null
-
         try {
             withContext(Dispatchers.Default) {
                 // デコードする（AAC を PCM に）
-                decode(
-                    mediaExtractorFormatPair = mediaExtractorFormatPair,
-                    rawDataFile = rawDataFile,
-                    onReceiveMediaFormat = { input, output ->
-                        inputMediaFormat = input
-                        outputMediaFormat = output
+                AudioEncodeDecodeProcessor.decode(
+                    input = inUri.toAkariCoreInputOutputData(context),
+                    output = rawDataFile.toAkariCoreInputOutputData(),
+                    onOutputFormat = { outputFormat ->
+                        outputMediaFormat = outputFormat
                     }
                 )
 
@@ -58,16 +54,18 @@ object AudioProcessor {
                     samplingRate = outputMediaFormat!!.getInteger(MediaFormat.KEY_SAMPLE_RATE),
                     channelCount = outputMediaFormat!!.getInteger(MediaFormat.KEY_CHANNEL_COUNT),
                     // Duration は MediaCodec#outputFormat ではなく MediaExtractor から
-                    durationUs = inputMediaFormat!!.getLong(MediaFormat.KEY_DURATION)
+                    durationUs = inputMediaFormat.getLong(MediaFormat.KEY_DURATION)
                 )
 
                 // PCM を AAC にエンコードする
-                encode(
-                    rawDataFile = reverseRawDataFile,
-                    outFile = outFile,
+                AudioEncodeDecodeProcessor.encode(
+                    input = reverseRawDataFile.toAkariCoreInputOutputData(),
+                    output = outFile.toAkariCoreInputOutputData(),
                     samplingRate = outputMediaFormat!!.getInteger(MediaFormat.KEY_SAMPLE_RATE),
                     channelCount = outputMediaFormat!!.getInteger(MediaFormat.KEY_CHANNEL_COUNT),
-                    bitRate = 192_000
+                    bitRate = 192_000,
+                    containerFormat = MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4,
+                    codecName = MediaFormat.MIMETYPE_AUDIO_AAC
                 )
             }
         } finally {
@@ -78,46 +76,6 @@ object AudioProcessor {
             }
         }
         return true
-    }
-
-    /** PCM を AAC にエンコードする */
-    private suspend fun encode(
-        rawDataFile: File,
-        outFile: File,
-        samplingRate: Int,
-        channelCount: Int,
-        bitRate: Int
-    ) = withContext(Dispatchers.Default) {
-        val audioEncoder = AudioEncoder().apply {
-            prepareEncoder(
-                sampleRate = samplingRate,
-                channelCount = channelCount,
-                bitRate = bitRate
-            )
-        }
-        // MediaMuxer
-        var index = -1
-        val mediaMuxer = MediaMuxer(outFile.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-        // エンコードする
-        rawDataFile.inputStream().use { inputStream ->
-            audioEncoder.startAudioEncode(
-                onRecordInput = { bytes ->
-                    // データをエンコーダーに渡す
-                    inputStream.read(bytes)
-                },
-                onOutputFormatAvailable = { mediaFormat ->
-                    // トラックを追加
-                    index = mediaMuxer.addTrack(mediaFormat)
-                    mediaMuxer.start()
-                },
-                onOutputBufferAvailable = { byteBuffer, bufferInfo ->
-                    // 書き込む
-                    mediaMuxer.writeSampleData(index, byteBuffer, bufferInfo)
-                }
-            )
-        }
-        mediaMuxer.stop()
-        mediaMuxer.release()
     }
 
     /** PCM 音声データを逆再生できるようにする */
@@ -157,38 +115,4 @@ object AudioProcessor {
             }
         }
     }
-
-    /** AAC をデコードする（PCM */
-    private suspend fun decode(
-        mediaExtractorFormatPair: Pair<MediaExtractor, MediaFormat>,
-        rawDataFile: File,
-        onReceiveMediaFormat: (input: MediaFormat, output: MediaFormat) -> Unit
-    ) {
-        val (mediaExtractor, mediaFormat) = mediaExtractorFormatPair
-        // デコーダーにメタデータを渡す
-        val audioDecoder = AudioDecoder().apply {
-            prepareDecoder(mediaFormat)
-        }
-        // ファイルに書き込む準備
-        rawDataFile.outputStream().use { outputStream ->
-            // デコードする
-            audioDecoder.startAudioDecode(
-                onOutputFormat = { outputMediaFormat ->
-                    onReceiveMediaFormat(mediaFormat, outputMediaFormat)
-                },
-                readSampleData = { byteBuffer ->
-                    // データを進める
-                    val size = mediaExtractor.readSampleData(byteBuffer, 0)
-                    mediaExtractor.advance()
-                    size to mediaExtractor.sampleTime
-                },
-                onOutputBufferAvailable = { bytes ->
-                    // データを書き込む
-                    outputStream.write(bytes)
-                }
-            )
-        }
-        mediaExtractor.release()
-    }
-
 }

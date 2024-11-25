@@ -2,10 +2,8 @@ package io.github.takusan23.dougaundroid.processor
 
 import android.content.Context
 import io.github.takusan23.dougaundroid.data.InputVideoInfo
-import io.github.takusan23.dougaundroid.processor.audio.AudioProcessor
 import io.github.takusan23.dougaundroid.processor.tool.MediaMuxerTool
 import io.github.takusan23.dougaundroid.processor.tool.MediaStoreTool
-import io.github.takusan23.dougaundroid.processor.video.VideoProcessor
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
@@ -37,7 +35,7 @@ object DougaUnDroidProcessor {
                 launch {
                     hasAudioTrack = AudioProcessor.start(
                         context = context,
-                        inFile = inputUri,
+                        inUri = inputUri,
                         outFile = reverseAudioFile,
                         tempFolder = tempFolder
                     )
@@ -45,7 +43,7 @@ object DougaUnDroidProcessor {
                 launch {
                     VideoProcessor.start(
                         context = context,
-                        inFile = inputUri,
+                        inUri = inputUri,
                         outFile = reverseVideoFile,
                         onProgressUpdateMs = onProgressUpdate
                     )
@@ -68,9 +66,6 @@ object DougaUnDroidProcessor {
                 file = if (hasAudioTrack) resultFile else reverseVideoFile,
                 fileName = resultFile.name
             )
-        } catch (e:Exception) {
-            e.printStackTrace()
-            throw e
         } finally {
             // 要らないファイルを消す
             tempFolder.deleteRecursively()

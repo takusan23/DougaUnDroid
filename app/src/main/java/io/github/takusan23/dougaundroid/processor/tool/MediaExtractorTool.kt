@@ -14,28 +14,27 @@ object MediaExtractorTool {
     }
 
     /**
-     * [MediaExtractor]を作る
+     * トラックの[MediaFormat]を取り出す
      *
      * @param context [Context]
      * @param track 音声 or 映像
      * @param uri PhotoPicker や SAF の Uri
-     * @return [MediaExtractor]と選択したトラックの[MediaFormat]。[Track.AUDIO]を指定したのに音声トラックがない場合は null
+     * @return [MediaFormat]
      */
-    fun createMediaExtractor(
+    fun getTrackMediaFormat(
         context: Context,
         uri: Uri,
         track: Track
-    ): Pair<MediaExtractor, MediaFormat>? {
+    ): MediaFormat? {
         val mediaExtractor = MediaExtractor().apply {
-            // read で FileDescriptor を開く
             context.contentResolver.openFileDescriptor(uri, "r")?.use {
                 setDataSource(it.fileDescriptor)
             }
         }
-        val (index, mediaFormat) = mediaExtractor.getTrackMediaFormat(track) ?: return null
-        mediaExtractor.selectTrack(index)
-        // Extractor / MediaFormat を返す
-        return mediaExtractor to mediaFormat
+        val mediaFormat = (0 until mediaExtractor.trackCount)
+            .map { index -> mediaExtractor.getTrackFormat(index) }
+            .firstOrNull { mediaFormat -> mediaFormat.getString(MediaFormat.KEY_MIME)?.startsWith(track.mimeTypePrefix) == true }
+        return mediaFormat
     }
 
     /**
