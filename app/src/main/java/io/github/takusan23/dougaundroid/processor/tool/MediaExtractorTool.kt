@@ -16,20 +16,23 @@ object MediaExtractorTool {
     /**
      * [MediaExtractor]を作る
      *
-     * @return [MediaExtractor]と選択したトラックの[MediaFormat]
+     * @param context [Context]
+     * @param track 音声 or 映像
+     * @param uri PhotoPicker や SAF の Uri
+     * @return [MediaExtractor]と選択したトラックの[MediaFormat]。[Track.AUDIO]を指定したのに音声トラックがない場合は null
      */
     fun createMediaExtractor(
         context: Context,
         uri: Uri,
         track: Track
-    ): Pair<MediaExtractor, MediaFormat> {
+    ): Pair<MediaExtractor, MediaFormat>? {
         val mediaExtractor = MediaExtractor().apply {
             // read で FileDescriptor を開く
             context.contentResolver.openFileDescriptor(uri, "r")?.use {
                 setDataSource(it.fileDescriptor)
             }
         }
-        val (index, mediaFormat) = mediaExtractor.getTrackMediaFormat(track)
+        val (index, mediaFormat) = mediaExtractor.getTrackMediaFormat(track) ?: return null
         mediaExtractor.selectTrack(index)
         // Extractor / MediaFormat を返す
         return mediaExtractor to mediaFormat
@@ -38,26 +41,32 @@ object MediaExtractorTool {
     /**
      * [MediaExtractor]を作る
      *
-     * @return [MediaExtractor]と選択したトラックの[MediaFormat]
+     * @param file ファイル
+     * @param track 音声 or 映像
+     * @return [MediaExtractor]と選択したトラックの[MediaFormat]。[Track.AUDIO]を指定したのに音声トラックがない場合は null
      */
     fun createMediaExtractor(
         file: File,
         track: Track
-    ): Pair<MediaExtractor, MediaFormat> {
+    ): Pair<MediaExtractor, MediaFormat>? {
         val mediaExtractor = MediaExtractor().apply {
             setDataSource(file.path)
         }
-        val (index, mediaFormat) = mediaExtractor.getTrackMediaFormat(track)
+        val (index, mediaFormat) = mediaExtractor.getTrackMediaFormat(track) ?: return null
         mediaExtractor.selectTrack(index)
         // Extractor / MediaFormat を返す
         return mediaExtractor to mediaFormat
     }
 
-    private fun MediaExtractor.getTrackMediaFormat(track: Track): Pair<Int, MediaFormat> {
+    private fun MediaExtractor.getTrackMediaFormat(track: Track): Pair<Int, MediaFormat>? {
         // トラックを選択する（映像・音声どっち？）
         val trackIndex = (0 until this.trackCount)
             .map { this.getTrackFormat(it) }
             .indexOfFirst { it.getString(MediaFormat.KEY_MIME)?.startsWith(track.mimeTypePrefix) == true }
+
+        // -1 の場合は存在しないため null
+        if (trackIndex == -1) return null
+
         val mediaFormat = this.getTrackFormat(trackIndex)
         // 位置と MediaFormat
         return trackIndex to mediaFormat

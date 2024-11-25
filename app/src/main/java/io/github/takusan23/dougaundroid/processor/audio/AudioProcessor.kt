@@ -1,11 +1,13 @@
 package io.github.takusan23.dougaundroid.processor.audio
 
 import android.content.Context
+import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.net.Uri
 import io.github.takusan23.dougaundroid.processor.tool.MediaExtractorTool
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -14,13 +16,21 @@ import java.io.RandomAccessFile
 /** 音声を逆にする */
 object AudioProcessor {
 
-    /** 音声を逆再生にする */
+    /**
+     * 音声を逆再生にする
+     *
+     * @return 動画に音声トラックがない場合は false
+     */
     suspend fun start(
         context: Context,
         inFile: Uri,
         outFile: File,
         tempFolder: File
-    ) = withContext(Dispatchers.Default) {
+    ): Boolean {
+
+        // そもそも音声トラックがない場合は早期 return。 false
+        val mediaExtractorFormatPair = MediaExtractorTool.createMediaExtractor(context, inFile, MediaExtractorTool.Track.AUDIO) ?: return false
+
         // 音声の生データ置き場
         val rawDataFile = tempFolder.resolve("raw_file")
         val reverseRawDataFile = tempFolder.resolve("reverse_raw_data")
@@ -30,40 +40,44 @@ object AudioProcessor {
         var outputMediaFormat: MediaFormat? = null
 
         try {
-            // デコードする（AAC を PCM に）
-            decode(
-                context = context,
-                inFile = inFile,
-                rawDataFile = rawDataFile,
-                onReceiveMediaFormat = { input, output ->
-                    inputMediaFormat = input
-                    outputMediaFormat = output
-                }
-            )
+            withContext(Dispatchers.Default) {
+                // デコードする（AAC を PCM に）
+                decode(
+                    mediaExtractorFormatPair = mediaExtractorFormatPair,
+                    rawDataFile = rawDataFile,
+                    onReceiveMediaFormat = { input, output ->
+                        inputMediaFormat = input
+                        outputMediaFormat = output
+                    }
+                )
 
-            // PCM を操作して、逆再生になるように音声データを並び替える
-            reversePcmAudioData(
-                rawPcmFile = rawDataFile,
-                outFile = reverseRawDataFile,
-                samplingRate = outputMediaFormat!!.getInteger(MediaFormat.KEY_SAMPLE_RATE),
-                channelCount = outputMediaFormat!!.getInteger(MediaFormat.KEY_CHANNEL_COUNT),
-                // Duration は MediaCodec#outputFormat ではなく MediaExtractor から
-                durationUs = inputMediaFormat!!.getLong(MediaFormat.KEY_DURATION)
-            )
+                // PCM を操作して、逆再生になるように音声データを並び替える
+                reversePcmAudioData(
+                    rawPcmFile = rawDataFile,
+                    outFile = reverseRawDataFile,
+                    samplingRate = outputMediaFormat!!.getInteger(MediaFormat.KEY_SAMPLE_RATE),
+                    channelCount = outputMediaFormat!!.getInteger(MediaFormat.KEY_CHANNEL_COUNT),
+                    // Duration は MediaCodec#outputFormat ではなく MediaExtractor から
+                    durationUs = inputMediaFormat!!.getLong(MediaFormat.KEY_DURATION)
+                )
 
-            // PCM を AAC にエンコードする
-            encode(
-                rawDataFile = reverseRawDataFile,
-                outFile = outFile,
-                samplingRate = outputMediaFormat!!.getInteger(MediaFormat.KEY_SAMPLE_RATE),
-                channelCount = outputMediaFormat!!.getInteger(MediaFormat.KEY_CHANNEL_COUNT),
-                bitRate = 192_000
-            )
+                // PCM を AAC にエンコードする
+                encode(
+                    rawDataFile = reverseRawDataFile,
+                    outFile = outFile,
+                    samplingRate = outputMediaFormat!!.getInteger(MediaFormat.KEY_SAMPLE_RATE),
+                    channelCount = outputMediaFormat!!.getInteger(MediaFormat.KEY_CHANNEL_COUNT),
+                    bitRate = 192_000
+                )
+            }
         } finally {
             // 要らないファイルを消す
-            rawDataFile.delete()
-            reverseRawDataFile.delete()
+            withContext(Dispatchers.IO + NonCancellable) {
+                rawDataFile.delete()
+                reverseRawDataFile.delete()
+            }
         }
+        return true
     }
 
     /** PCM を AAC にエンコードする */
@@ -146,13 +160,11 @@ object AudioProcessor {
 
     /** AAC をデコードする（PCM */
     private suspend fun decode(
-        context: Context,
-        inFile: Uri,
+        mediaExtractorFormatPair: Pair<MediaExtractor, MediaFormat>,
         rawDataFile: File,
         onReceiveMediaFormat: (input: MediaFormat, output: MediaFormat) -> Unit
     ) {
-        // Extractor から取り出す
-        val (mediaExtractor, mediaFormat) = MediaExtractorTool.createMediaExtractor(context, inFile, MediaExtractorTool.Track.AUDIO)
+        val (mediaExtractor, mediaFormat) = mediaExtractorFormatPair
         // デコーダーにメタデータを渡す
         val audioDecoder = AudioDecoder().apply {
             prepareDecoder(mediaFormat)

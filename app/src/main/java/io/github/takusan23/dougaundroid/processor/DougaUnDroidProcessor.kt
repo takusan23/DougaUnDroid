@@ -6,10 +6,8 @@ import io.github.takusan23.dougaundroid.processor.audio.AudioProcessor
 import io.github.takusan23.dougaundroid.processor.tool.MediaMuxerTool
 import io.github.takusan23.dougaundroid.processor.tool.MediaStoreTool
 import io.github.takusan23.dougaundroid.processor.video.VideoProcessor
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /** 逆再生動画を作る処理 */
 object DougaUnDroidProcessor {
@@ -22,7 +20,7 @@ object DougaUnDroidProcessor {
         context: Context,
         videoInfo: InputVideoInfo,
         onProgressUpdate: (currentMs: Long) -> Unit
-    ): Unit = withContext(Dispatchers.Default) {
+    ) {
         // 一時ファイル置き場
         val tempFolder = context.getExternalFilesDir(null)?.resolve("temp")?.apply { mkdir() }!!
         val reverseVideoFile = tempFolder.resolve("temp_video_reverse.mp4")
@@ -33,16 +31,17 @@ object DougaUnDroidProcessor {
         try {
 
             // 音声トラック・映像トラックそれぞれ並列で処理
-            // TODO 音声トラックがない場合の処理
-            listOf(
+            // 音声トラックがない場合の処理
+            var hasAudioTrack = true
+            coroutineScope {
                 launch {
-                    AudioProcessor.start(
+                    hasAudioTrack = AudioProcessor.start(
                         context = context,
                         inFile = inputUri,
                         outFile = reverseAudioFile,
                         tempFolder = tempFolder
                     )
-                },
+                }
                 launch {
                     VideoProcessor.start(
                         context = context,
@@ -51,20 +50,27 @@ object DougaUnDroidProcessor {
                         onProgressUpdateMs = onProgressUpdate
                     )
                 }
-            ).joinAll()
+            }
 
             // 音声トラックと映像トラックを合わせる
-            MediaMuxerTool.mixAvTrack(
-                audioTrackFile = reverseAudioFile,
-                videoTrackFile = reverseVideoFile,
-                resultFile = resultFile
-            )
+            if (hasAudioTrack) {
+                MediaMuxerTool.mixAvTrack(
+                    audioTrackFile = reverseAudioFile,
+                    videoTrackFile = reverseVideoFile,
+                    resultFile = resultFile
+                )
+            }
 
             // 保存する
+            // 音声トラックがない場合は映像だけ
             MediaStoreTool.saveToVideoFolder(
                 context = context,
-                file = resultFile
+                file = if (hasAudioTrack) resultFile else reverseVideoFile,
+                fileName = resultFile.name
             )
+        } catch (e:Exception) {
+            e.printStackTrace()
+            throw e
         } finally {
             // 要らないファイルを消す
             tempFolder.deleteRecursively()

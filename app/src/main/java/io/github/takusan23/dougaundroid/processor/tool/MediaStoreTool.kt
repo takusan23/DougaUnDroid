@@ -16,18 +16,19 @@ object MediaStoreTool {
     /** 端末の動画フォルダに保存する */
     suspend fun saveToVideoFolder(
         context: Context,
-        file: File
+        file: File,
+        fileName: String
     ) = withContext(Dispatchers.IO) {
         val contentResolver = context.contentResolver
         val contentValues = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             contentValuesOf(
-                MediaStore.MediaColumns.DISPLAY_NAME to file.name,
+                MediaStore.MediaColumns.DISPLAY_NAME to fileName,
                 MediaStore.MediaColumns.MIME_TYPE to "video/mp4",
                 MediaStore.MediaColumns.RELATIVE_PATH to "${Environment.DIRECTORY_MOVIES}/DougaUnDroid"
             )
         } else {
             contentValuesOf(
-                MediaStore.MediaColumns.DISPLAY_NAME to file.name,
+                MediaStore.MediaColumns.DISPLAY_NAME to fileName,
                 MediaStore.MediaColumns.MIME_TYPE to "video/mp4"
             )
         }

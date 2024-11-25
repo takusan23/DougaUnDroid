@@ -27,8 +27,9 @@ object MediaMuxerTool {
         resultFile: File
     ) = withContext(Dispatchers.IO) {
         // 各ファイルから MediaExtractor を作る
-        val (audioMediaExtractor, audioFormat) = MediaExtractorTool.createMediaExtractor(audioTrackFile, MediaExtractorTool.Track.AUDIO)
-        val (videoMediaExtractor, videoFormat) = MediaExtractorTool.createMediaExtractor(videoTrackFile, MediaExtractorTool.Track.VIDEO)
+        // あるはずなので !!
+        val (audioMediaExtractor, audioFormat) = MediaExtractorTool.createMediaExtractor(audioTrackFile, MediaExtractorTool.Track.AUDIO)!!
+        val (videoMediaExtractor, videoFormat) = MediaExtractorTool.createMediaExtractor(videoTrackFile, MediaExtractorTool.Track.VIDEO)!!
 
         // 新しくコンテナファイルを作って保存する
         // 音声と映像を追加
