@@ -10,7 +10,6 @@ import io.github.takusan23.akaricore.common.toAkariCoreInputOutputData
 import io.github.takusan23.akaricore.graphics.AkariGraphicsProcessor
 import io.github.takusan23.akaricore.graphics.AkariGraphicsSurfaceTexture
 import io.github.takusan23.akaricore.graphics.mediacodec.AkariVideoDecoder
-import io.github.takusan23.akaricore.graphics.mediacodec.AkariVideoEncoder
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -42,13 +41,14 @@ object VideoProcessor {
             30
         }
         val frameMs = 1000 / frameRate
-        val isTenBitHdr = inputVideoMediaMetadataRetriever.isTenBitHdr()
+        val tenBitHdrPair = inputVideoMediaMetadataRetriever.extractTenBitHdrPair()
+        val isTenBitHdr = tenBitHdrPair != null
 
         // もう使わない
         inputVideoMediaMetadataRetriever.release()
 
         // エンコーダー
-        val akariVideoEncoder = AkariVideoEncoder().apply {
+        val akariVideoEncoder = VideoEncoderV2().apply {
             prepare(
                 output = outFile.toAkariCoreInputOutputData(),
                 containerFormat = MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4,
@@ -57,8 +57,14 @@ object VideoProcessor {
                 frameRate = 30,
                 bitRate = bitRate,
                 keyframeInterval = 1,
-                // HDR の場合は HEVC にする
-                codecName = if (isTenBitHdr) MediaFormat.MIMETYPE_VIDEO_HEVC else MediaFormat.MIMETYPE_VIDEO_AVC
+                // HDR の情報がある場合は HEVC にして、エンコーダーにも伝える
+                codecName = if (isTenBitHdr) MediaFormat.MIMETYPE_VIDEO_HEVC else MediaFormat.MIMETYPE_VIDEO_AVC,
+                tenBitHdrParametersOrNullSdr = if (isTenBitHdr && tenBitHdrPair != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    VideoEncoderV2.TenBitHdrParameters(
+                        colorStandard = tenBitHdrPair.first,
+                        colorTransfer = tenBitHdrPair.second
+                    )
+                } else null
             )
         }
 
@@ -141,15 +147,17 @@ object VideoProcessor {
      * 詳しくはここ
      * https://cs.android.com/android/platform/superproject/main/+/main:frameworks/av/media/libstagefright/FrameDecoder.cpp
      *
-     * @return HDR（HLG など）の動画の場合は true。
+     * @return 色域、ガンマカーブをいれた Pair。null の場合は HDR ではない。
      */
-    private fun MediaMetadataRetriever.isTenBitHdr(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+    private fun MediaMetadataRetriever.extractTenBitHdrPair(): Pair<Int, Int>? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val colorStandard = extractMetadata(MediaMetadataRetriever.METADATA_KEY_COLOR_STANDARD)?.toInt()
             val colorTransfer = extractMetadata(MediaMetadataRetriever.METADATA_KEY_COLOR_TRANSFER)?.toInt()
-            colorStandard == MediaFormat.COLOR_STANDARD_BT2020 && (colorTransfer == MediaFormat.COLOR_TRANSFER_ST2084 || colorTransfer == MediaFormat.COLOR_TRANSFER_HLG)
-        } else {
-            false
+            // HDR かの判定
+            if (colorStandard == MediaFormat.COLOR_STANDARD_BT2020 && (colorTransfer == MediaFormat.COLOR_TRANSFER_ST2084 || colorTransfer == MediaFormat.COLOR_TRANSFER_HLG)) {
+                return Pair(colorStandard, colorTransfer)
+            }
         }
+        return null
     }
 }
