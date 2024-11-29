@@ -10,6 +10,7 @@ import io.github.takusan23.akaricore.common.toAkariCoreInputOutputData
 import io.github.takusan23.akaricore.graphics.AkariGraphicsProcessor
 import io.github.takusan23.akaricore.graphics.AkariGraphicsSurfaceTexture
 import io.github.takusan23.akaricore.graphics.mediacodec.AkariVideoDecoder
+import io.github.takusan23.akaricore.graphics.mediacodec.AkariVideoEncoder
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -48,7 +49,7 @@ object VideoProcessor {
         inputVideoMediaMetadataRetriever.release()
 
         // エンコーダー
-        val akariVideoEncoder = VideoEncoderV2().apply {
+        val akariVideoEncoder = AkariVideoEncoder().apply {
             prepare(
                 output = outFile.toAkariCoreInputOutputData(),
                 containerFormat = MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4,
@@ -60,7 +61,7 @@ object VideoProcessor {
                 // HDR の情報がある場合は HEVC にして、エンコーダーにも伝える
                 codecName = if (isTenBitHdr) MediaFormat.MIMETYPE_VIDEO_HEVC else MediaFormat.MIMETYPE_VIDEO_AVC,
                 tenBitHdrParametersOrNullSdr = if (isTenBitHdr && tenBitHdrPair != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    VideoEncoderV2.TenBitHdrParameters(
+                    AkariVideoEncoder.TenBitHdrParameters(
                         colorStandard = tenBitHdrPair.first,
                         colorTransfer = tenBitHdrPair.second
                     )
@@ -92,7 +93,7 @@ object VideoProcessor {
             // 描画も開始
             val graphicsJob = launch {
                 try {
-                    val loopContinueData = AkariGraphicsProcessor.LoopContinueData(isRequestNextFrame = true, currentFrameMs = 0)
+                    val loopContinueData = AkariGraphicsProcessor.LoopContinueData(isRequestNextFrame = true, currentFrameNanoSeconds = 0)
                     var currentPositionMs = 0L
 
                     akariGraphicsProcessor.drawLoop {
@@ -104,7 +105,7 @@ object VideoProcessor {
                         drawSurfaceTexture(akariGraphicsSurfaceTexture)
 
                         // 時間を伝え、動画時間を超えた場合はループを抜ける
-                        loopContinueData.currentFrameMs = currentPositionMs
+                        loopContinueData.currentFrameNanoSeconds = currentPositionMs * AkariGraphicsProcessor.LoopContinueData.MILLI_SECONDS_TO_NANO_SECONDS
                         currentPositionMs += frameMs
                         loopContinueData.isRequestNextFrame = currentPositionMs <= durationMs
                         onProgressUpdateMs(currentPositionMs)
