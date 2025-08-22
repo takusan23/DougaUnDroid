@@ -6,14 +6,14 @@ plugins {
 
 android {
     namespace = "io.github.takusan23.dougaundroid"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.takusan23.dougaundroid"
         minSdk = 21
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 4
-        versionName = "2.0.0"
+        versionName = "2.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

@@ -102,7 +102,7 @@ object VideoProcessor {
 
                         // シークして描画
                         akariVideoDecoder.seekTo(reverseCurrentPositionMs)
-                        drawSurfaceTexture(akariGraphicsSurfaceTexture)
+                        drawSurfaceTexture(akariGraphicsSurfaceTexture, nullOrTextureUpdateTimeoutMs = 500)
 
                         // 時間を伝え、動画時間を超えた場合はループを抜ける
                         loopContinueData.currentFrameNanoSeconds = currentPositionMs * AkariGraphicsProcessor.LoopContinueData.MILLI_SECONDS_TO_NANO_SECONDS
