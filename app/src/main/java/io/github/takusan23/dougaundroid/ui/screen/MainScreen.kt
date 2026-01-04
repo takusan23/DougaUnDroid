@@ -1,44 +1,49 @@
 package io.github.takusan23.dougaundroid.ui.screen
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+import kotlinx.serialization.Serializable
 
 /** 画面遷移先一覧 */
-enum class MainScreenPaths(val path: String) {
+sealed interface MainScreenPaths : NavKey {
+    @Serializable
     /** メイン画面、処理中もこれ */
-    Home("home"),
+    data object Home : MainScreenPaths
 
     /** 設定画面 */
-    Setting("setting"),
+    @Serializable
+    data object Setting : MainScreenPaths
 
     /** ライセンス */
-    License("license")
+    @Serializable
+    data object License : MainScreenPaths
 }
 
 @Composable
 fun MainScreen() {
-    val navController = rememberNavController()
-    NavHost(
-        navController = navController,
-        startDestination = MainScreenPaths.Home.path
-    ) {
-        composable(MainScreenPaths.Home.path) {
-            HomeScreen(
-                onNavigate = { navController.navigate(it.path) }
-            )
+    val backStack = rememberNavBackStack(MainScreenPaths.Home)
+    NavDisplay(
+        backStack = backStack,
+        entryProvider = entryProvider {
+            entry<MainScreenPaths.Home> {
+                HomeScreen(
+                    onNavigate = { backStack += it }
+                )
+            }
+            entry<MainScreenPaths.Setting> {
+                SettingScreen(
+                    onBack = { backStack.removeLastOrNull() },
+                    onNavigate = { backStack += it }
+                )
+            }
+            entry<MainScreenPaths.License> {
+                LicenseScreen(
+                    onBack = { backStack.removeLastOrNull() },
+                )
+            }
         }
-        composable(MainScreenPaths.Setting.path) {
-            SettingScreen(
-                onBack = { navController.popBackStack() },
-                onNavigate = { navController.navigate(it.path) }
-            )
-        }
-        composable(MainScreenPaths.License.path) {
-            LicenseScreen(
-                onBack = { navController.popBackStack() },
-            )
-        }
-    }
+    )
 }

@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.dropUnlessResumed
 import io.github.takusan23.dougaundroid.R
 
 private data class LicenseData(
@@ -154,7 +155,7 @@ fun LicenseScreen(
             TopAppBar(
                 title = { Text(text = stringResource(id = R.string.license_screen_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = dropUnlessResumed(block = onBack)) {
                         Icon(painter = painterResource(id = R.drawable.arrow_back_24px), contentDescription = null)
                     }
                 }
