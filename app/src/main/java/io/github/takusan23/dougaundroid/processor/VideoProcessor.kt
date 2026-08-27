@@ -101,8 +101,16 @@ object VideoProcessor {
                         val reverseCurrentPositionMs = durationMs - currentPositionMs
 
                         // シークして描画
-                        akariVideoDecoder.seekTo(reverseCurrentPositionMs)
-                        drawSurfaceTexture(akariGraphicsSurfaceTexture, nullOrTextureUpdateTimeoutMs = 500)
+                        val seekResult = akariVideoDecoder.seekTo(reverseCurrentPositionMs)
+
+                        // TODO
+                        // ↑の seekTo はおそらく時間が増える方向にしかキーフレームを探さない、そのため動画時間と同じ時間のフレームを得ようとすると isSuccessful=false になる
+                        // false だと awaitAlreadyFrameAvailableCallback() が一生呼ばれず、描画されない
+                        // とりいそぎ true の時のみ描画するが、これは最初のフレームが真っ暗になることを意味しているので良くない、、、
+                        // 根本解決は seekTo(seekMode = PREV or NEXT) 的なのを指定できるようにするべき、、
+                        if (seekResult.isSuccessful) {
+                            drawSurfaceTexture(akariGraphicsSurfaceTexture, nullOrTextureUpdateTimeoutMs = 500)
+                        }
 
                         // 時間を伝え、動画時間を超えた場合はループを抜ける
                         loopContinueData.currentFrameNanoSeconds = currentPositionMs * AkariGraphicsProcessor.LoopContinueData.MILLI_SECONDS_TO_NANO_SECONDS
