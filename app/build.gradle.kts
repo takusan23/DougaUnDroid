@@ -14,8 +14,8 @@ android {
         applicationId = "io.github.takusan23.dougaundroid"
         minSdk = 23
         targetSdk = 37
-        versionCode = 5
-        versionName = "2.1.0"
+        versionCode = 6
+        versionName = "2.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

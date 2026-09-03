@@ -108,6 +108,7 @@ object VideoProcessor {
                         // false だと awaitAlreadyFrameAvailableCallback() が一生呼ばれず、描画されない
                         // とりいそぎ true の時のみ描画するが、これは最初のフレームが真っ暗になることを意味しているので良くない、、、
                         // 根本解決は seekTo(seekMode = PREV or NEXT) 的なのを指定できるようにするべき、、
+                        // が、これはこれで、安全策としていれておくか
                         if (seekResult.isSuccessful) {
                             drawSurfaceTexture(akariGraphicsSurfaceTexture, nullOrTextureUpdateTimeoutMs = 500)
                         }
